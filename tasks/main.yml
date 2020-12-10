@@ -3,7 +3,7 @@
   become: yes
   template:
     src: update-hosts.sh.j2
-    dest: /usr/bin/update-hosts
+    dest: /usr/sbin/update-hosts
     mode: 0744
 
 - name: Creates a cron file under /etc/cron.d
@@ -12,5 +12,5 @@
     name: update hosts
     minute: "*/10"
     user: root
-    job: "/usr/bin/update-hosts"
+    job: "/usr/sbin/update-hosts"
     cron_file: ansible_update_hosts
