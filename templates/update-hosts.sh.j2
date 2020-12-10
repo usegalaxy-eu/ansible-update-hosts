@@ -1,0 +1,21 @@
+#!/bin/bash
+tmp=`mktemp`
+
+cat /etc/hosts| grep -v '^{{ network_prefix }}' > $tmp
+
+condor_status -autoformat Machine MyAddress | \
+    cut -f1 -d: | \
+    sed 's/<//g;s/{{ name_suffix }}//g'| \
+    awk '{print $2" "$1}'| \
+    sort -uk2 >> $tmp
+
+# Fix permissions
+chmod 644 $tmp
+# Replace our hosts
+mv $tmp /etc/hosts
+
+echo "$(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | paste -s -d,) cloud" > /etc/genders
+
+for group in $(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | awk -F- '{print $2}' | sort -u); do
+	echo "$(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | grep $group | paste -s -d,) $group" >> /etc/genders
+done

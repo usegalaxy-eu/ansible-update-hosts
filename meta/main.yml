@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  author: Galaxy Europe
+  description:  Update computing nodes list in a HTCondor managed cluster
+  company: Galaxy Europe
+  license: GPL-3.0
+  min_ansible_version: 2.5
+  role_name: update-hosts
+  platforms:
+  - name: EL
+    versions:
+    - all
+  - name: Fedora
+    versions:
+    - all
+  galaxy_tags:
+  - system
+dependencies: []
+allow_duplicates: yes
