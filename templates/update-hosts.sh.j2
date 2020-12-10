@@ -1,7 +1,7 @@
 #!/bin/bash
 tmp=`mktemp`
 
-cat /etc/hosts| grep -v '^{{ network_prefix }}' > $tmp
+cat /etc/hosts| grep -v '^{{ cloud_network_prefix }}' > $tmp
 
 condor_status -autoformat Machine MyAddress | \
     cut -f1 -d: | \
