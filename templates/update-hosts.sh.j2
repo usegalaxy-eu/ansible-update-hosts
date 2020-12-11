@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# cloud nodes hostname are expected to be of this kind:
+# suffix-general_category-flavor_description.domain
+
 tmp=`mktemp`
 
 cat /etc/hosts| grep -v '^{{ cloud_network_prefix }}' > $tmp
@@ -16,6 +20,6 @@ mv $tmp /etc/hosts
 
 echo "$(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | paste -s -d,) cloud" > /etc/genders
 
-for group in $(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | awk -F- '{print $2}' | sort -u); do
+for group in $(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $3}' | awk -F- '{print $2}' | sort -u); do
 	echo "$(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | grep $group | paste -s -d,) $group" >> /etc/genders
 done
