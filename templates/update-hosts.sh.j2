@@ -17,9 +17,18 @@ condor_status -autoformat Machine MyAddress | \
 chmod 644 $tmp
 # Replace our hosts
 mv $tmp /etc/hosts
-
+{% if update_hosts_genderfile %}
 echo "$(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | paste -s -d,) cloud" > /etc/genders
 
 for group in $(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | awk -F- '{print $3}' | sort -u); do
 	echo "$(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | grep $group | paste -s -d,) $group" >> /etc/genders
 done
+{% else %}
+mkdir -p {{ update_hosts_pssh_path }}
+
+echo "$(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}')" > /etc/pssh/cloud
+
+for group in $(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | awk -F- '{print $3}' | sort -u); do
+	echo "$(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | grep $group)" >> "/etc/pssh/$group"
+done
+{% endif %}
