@@ -1,4 +1,4 @@
-cloud_network_prefix: 10.5.68
+cloud_network_prefix: 10.5.67
 hostname_suffix: ".novalocal"
 update_hosts_genderfile: false
 update_hosts_pssh_path: /etc/pssh

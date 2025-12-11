@@ -5,9 +5,9 @@
 
 tmp=`mktemp`
 
-cat /etc/hosts| grep -v '^{{ cloud_network_prefix }}' > $tmp
+cat /etc/hosts| grep -v '^{{ cloud_network_prefix }}' | sort | uniq > $tmp
 
-condor_status -autoformat Machine MyAddress | \
+condor_status -autoformat Machine MyAddress | grep -v privat | grep novalocal | \
     cut -f1 -d: | \
     sed 's/<//g;s/{{ hostname_suffix }}//g'| \
     awk '{print $2" "$1}'| \
