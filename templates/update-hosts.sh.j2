@@ -5,13 +5,15 @@
 
 tmp=`mktemp`
 
-cat /etc/hosts| grep -v '^{{ cloud_network_prefix }}' | sort | uniq > $tmp
+grep -v '^{{ cloud_network_prefix }}' /etc/hosts | sort -unt. -k1,1 -k2,2 -k3,3 -k4,4 > $tmp
 
-condor_status -autoformat Machine MyAddress | grep -v privat | grep novalocal | \
+condor_status -af Machine MyAddress -constraint 'ParentSlotId is undefined && MyAddress isnt undefined' | \
+    grep -v privat | \
+    grep novalocal | \
     cut -f1 -d: | \
-    sed 's/<//g;s/{{ hostname_suffix }}//g'| \
+    sed 's/<//g;s/.novalocal//g'| \
     awk '{print $2" "$1}'| \
-    sort -uk2 >> $tmp
+    sort -unt. -k1,1 -k2,2 -k3,3 -k4,4 >> $tmp
 
 # Fix permissions
 chmod 644 $tmp
