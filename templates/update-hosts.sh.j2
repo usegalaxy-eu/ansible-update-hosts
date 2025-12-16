@@ -3,7 +3,7 @@
 # cloud nodes hostname are expected to be of this kind:
 # suffix-general_category-flavor_description-random_number.domain
 
-tmp=`mktemp`
+tmp=$(mktemp)
 
 grep -v '^{{ cloud_network_prefix }}' /etc/hosts | sort -unt. -k1,1 -k2,2 -k3,3 -k4,4 > $tmp
 
@@ -19,18 +19,54 @@ condor_status -af Machine MyAddress -constraint 'ParentSlotId is undefined && My
 chmod 644 $tmp
 # Replace our hosts
 mv $tmp /etc/hosts
+
 {% if update_hosts_genderfile %}
 echo "$(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | paste -s -d,) cloud" > /etc/genders
-
 for group in $(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | awk -F- '{print $3}' | sort -u); do
 	echo "$(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | grep $group | paste -s -d,) $group" >> /etc/genders
 done
 {% else %}
-mkdir -p {{ update_hosts_pssh_path }}
 
-echo "$(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}')" > /etc/pssh/cloud
 
-for group in $(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | awk -F- '{print $3}' | sort -u); do
-	echo "$(cat /etc/hosts | grep {{ cloud_network_prefix }} | awk '{print $2}' | grep $group)" >> "/etc/pssh/$group"
-done
+pssh_dir="{{ update_hosts_pssh_path }}"
+mkdir -p "$pssh_dir"
+awk -v prefix="{{ cloud_network_prefix }}" -v dir="$pssh_dir" '
+    # Only keep lines whose IP (field 1) starts with the cloud prefix
+    index($1, prefix) == 1 {
+        host = $2
+
+        # Optional: strip domain part for grouping, but keep full host in files
+        split(host, h, ".")
+        split(h[1], parts, "-")
+
+        # 3rd dash-separated piece is the group:
+        # suffix-general_category-flavor_description-random_number
+        group = parts[3]
+
+        # All cloud hosts go to "cloud" (one per line, unique)
+        if (!seen_cloud[host]++) {
+            print host > (dir "/cloud")
+        }
+
+        # Per-group hosts (one per line, unique per group)
+        key = group SUBSEP host
+        if (!seen_group[key]++) {
+            print host > (dir "/" group)
+        }
+    }
+' /etc/hosts
 {% endif %}
+
+# Updates Bare Metal file.
+tmp=$(mktemp -d)
+
+curl -sS https://raw.githubusercontent.com/usegalaxy-eu/vgcn-infrastructure-playbook/main/hosts | awk -v pssh_dir="$tmp" '
+/^\[/ { group = substr($1, 2, length($1)-2); next }
+/.*\.bi\.privat/ {
+    hostname = $1
+    file = pssh_dir "/" group
+    print hostname >> file
+    print hostname >> pssh_dir "/bare-metal"
+}
+'
+cp -r $tmp/* /etc/pssh/
