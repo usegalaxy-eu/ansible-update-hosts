@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # cloud nodes hostname are expected to be of this kind:
 # suffix-general_category-flavor_description-random_number.domain
@@ -60,7 +61,7 @@ awk -v prefix="{{ cloud_network_prefix }}" -v dir="$pssh_dir" '
 # Updates Bare Metal file.
 tmp=$(mktemp -d)
 
-curl -sS https://raw.githubusercontent.com/usegalaxy-eu/vgcn-infrastructure-playbook/main/hosts | awk -v pssh_dir="$tmp" '
+curl -fsS https://raw.githubusercontent.com/usegalaxy-eu/vgcn-infrastructure-playbook/main/hosts | awk -v pssh_dir="$tmp" '
 /^\[/ { group = substr($1, 2, length($1)-2); next }
 /.*\.bi\.privat/ {
     hostname = $1
