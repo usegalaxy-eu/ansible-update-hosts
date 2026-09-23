@@ -1,4 +1,13 @@
 ---
+- name: Ensure Parallel SSH host directory exists
+  become: yes
+  ansible.builtin.file:
+    path: /etc/pssh
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: Copy update-host script
   become: yes
   template:
